@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>Bitmask Decoder</title>
+<style>
+  body {
+    display: inline-block;
+    min-width: 700px;
+    background: #0f111a;
+    font-family: Consolas, monospace;
+    padding: 24px;
+    color: #e6e6e6;
+  }
+
+  h2 {
+    margin-top: 0;
+    color: #7aa2f7;
+  }
+
+  .desc {
+    font-size: 13px;
+    color: #9aa5ce;
+    margin-bottom: 10px;
+  }
+
+  .input-box {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  input.hex {
+    flex: 1;
+    background: #1a1b26;
+    color: #e6e6e6;
+    border: 1px solid #3b4261;
+    padding: 8px 10px;
+    font-size: 15px;
+    border-radius: 4px;
+  }
+
+  input::placeholder {
+    color: #565f89;
+  }
+
+  button {
+    background: #7aa2f7;
+    border: none;
+    color: #0f111a;
+    font-weight: bold;
+    padding: 8px 18px;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+
+  button:hover {
+    background: #89b4fa;
+  }
+
+  pre {
+    background: #1a1b26;
+    border: 1px solid #3b4261;
+    padding: 14px;
+    border-radius: 6px;
+    line-height: 1.45;
+    font-size: 14px;
+    white-space: pre-wrap;
+  }
+
+  .section {
+    color: #f7768e;
+    font-weight: bold;
+  }
+</style>
+</head>
+<body>
+
+<h2>Bitmask Decoder</h2>
+
+<div class="desc">
+  띄어쓰기로 구분 bitmask_ext_ext1<br>
+  <br>
+  입력 형식 예:<br>
+  <code>0x98000000 0x00004001 0x82000000</code><br>
+  또는<br>
+  <code>98000000,4001,0x82000000</code>
+</div>
+
+<div class="input-box">
+  <input id="hexAll" class="hex" placeholder="BITMASK  EXT  EXT1" value="500061 0 98000000">
+  <button onclick="applyHex()">Decode</button>
+</div>
+
+<pre id="result">No data</pre>
+
+<script>
+
+const BITMAP = [
+  { mask: 0x00000003, type: "group", name: "Vehicle Hazard Type",
+    items: [
+      { bit: 0x00000000, label: "Hazard Lock" },
+      { bit: 0x00000001, label: "Hazard Push" },
+      { bit: 0x00000002, label: "Hazard Toggle" },
+      { bit: 0x00000003, label: "Hazard Smart Key Lock" }
+    ]
+  },
+  { mask: 0x0000000C, type: "group", name: "TailLamp Type",
+    items: [
+      { bit: 0x00000000, label: "Normal" },
+      { bit: 0x00000008, label: "Reverse" }
+    ]
+  },
+  { mask: 0x00000010, type: "flag", name: "Direct Control Validation for Trunk(Enable)" },
+  { mask: 0x000000E0, type: "group", name: "Fuel Type",
+    items: [
+      { bit: 0x00000000, label: "Gasoline" },
+      { bit: 0x00000020, label: "LPG" },
+      { bit: 0x00000040, label: "Diesel" },
+      { bit: 0x00000060, label: "HEV" },
+      { bit: 0x00000080, label: "EV" }
+    ]
+  },
+  { mask: 0x00000100, type: "flag", name: "Hazard Signal Active Low" },
+  { mask: 0x00000200, type: "flag", name: "Door Lock State Active Low" },
+  { mask: 0x00000400, type: "flag", name: "Active high operation of Door Lock Command Signal (Reverse)" },
+  { mask: 0x00000800, type: "flag", name: "Door Lock Check Only With the Driver's Front Door (FLONLY)" },
+  { mask: 0x00001000, type: "flag", name: "Avante MD does not check whether or not to check the trunk open status(No longer used) - Skip" },
+  { mask: 0x00002000, type: "flag", name: "Checking the door open status only with the driver's front door (FLONLY)" },
+  { mask: 0x0001C000, type: "group", name: "Airbag Veloster, Checking AIRBAG Status",
+    items: [
+      { bit: 0x00000000, label: "None" },
+      { bit: 0x00004000, label: "Type1" },
+      { bit: 0x00008000, label: "Type2" }
+    ]
+  },
+  { mask: 0x000E0000, type: "group", name: "OBD Request Type (OBD2PID Applied, SM added)",
+    items: [
+      { bit: 0x00000000, label: "None" },
+      { bit: 0x00020000, label: "Type1" },
+      { bit: 0x00040000, label: "Type2 - Extended CANID -> FIAT" },
+      { bit: 0x00060000, label: "Type3 - NoneRequest(SM3ZE)" }
+    ]
+  },
+  { mask: 0x00F00000, type: "group", name: "CAN Mask Type",
+    items: [
+      { bit: 0x00000000, label: "None" },
+      { bit: 0x00100000, label: "HK Type1" },
+      { bit: 0x00200000, label: "HK Type2" },
+      { bit: 0x00300000, label: "GM Type1 (Checked that bitmask is not used)" },
+      { bit: 0x00400000, label: "SM Type1" },
+      { bit: 0x00500000, label: "FULL" },
+      { bit: 0x00600000, label: "GM Type2" },
+      { bit: 0x00700000, label: "SM Type2 (QM3)" },
+      { bit: 0x00800000, label: "FIAT Type1" },
+      { bit: 0x00900000, label: "SM Type3 (QM5)" },
+      { bit: 0x00A00000, label: "SM Type4 (SM3 ZE EV)" },
+      { bit: 0x00B00000, label: "BMW-MINI Type1" },
+      { bit: 0x00C00000, label: "BENZ-A Type1" },
+      { bit: 0x00D00000, label: "FORD-MUSTANG Type1" },
+      { bit: 0x00F00000, label: "Operates according to VEHICLE_ID" }
+    ]
+  },
+  { mask: 0x01000000, type: "flag", name: "Distance Get Type CAN DATA" },
+  { mask: 0x02000000, type: "flag", name: "Distance Pulse Opt - Pulse is used" },
+  { mask: 0x04000000, type: "flag", name: "There is only one Door Lock/Unlock GPIO of direct control, and it is controlled by Toggle type (Single)" },
+  { mask: 0x08000000, type: "flag", name: "Hazard is not turned on when it is operated for too short time. To make it work for at least 3 seconds (SM5) - Hazard Oper Limit Time : ON" },
+  { mask: 0xF0000000, type: "group", name: "Door Status Type",
+    items: [
+      { bit: 0x00000000, label: "IO (Normal Type)" },
+      { bit: 0x20000000, label: "CAN SM Type1 (QM3)" },
+      { bit: 0x30000000, label: "CAN SM Type2 (QM5)" },
+      { bit: 0x40000000, label: "CAN SM Type3 (SM5)" },
+      { bit: 0x50000000, label: "CAN SM Type4 (SM3 ZE EV)" },
+      { bit: 0x60000000, label: "CAN HK Type1 (HG)" },
+      { bit: 0x70000000, label: "CAN BMW Type1 (BMW)" },
+      { bit: 0x80000000, label: "CAN BENZ-A Type1 (Benz-A)" }
+    ]
+  }
+];
+
+
+const extBITMAP = [
+  { mask: 0x00000001, type: "flag", name: "Horn Signal Type (Reverse: 12V OUT 1)" },
+  { mask: 0x00000002, type: "flag", name: "RPM changed to Engine Run Time" },
+  { mask: 0x00000004, type: "flag", name: "SOCAR-FIAT Door Lock Status is recognized by the Interrupt Edge" },
+  { mask: 0x00000020, type: "flag", name: "EV update SoC directly without filtering" },
+  { mask: 0x00000040, type: "flag", name: "ACC tie to CARIO" },
+  { mask: 0x00000080, type: "flag", name: "CAN NONE (Count by Pulse or Counter, This option is not used except in special cases, such as when the can odometer is incorrectly calculated depending on the vehicle)" },
+  { mask: 0x00000100, type: "flag", name: "Door Lock/Unlock Edge Type1" },
+  { mask: 0x00000200, type: "flag", name: "Door Open Status Active High (Open) - Ford Maker" },
+  { mask: 0x00000400, type: "flag", name: "Disable Auto Retry Door Lock (Enable)" },
+  { mask: 0x00000800, type: "flag", name: "Lock Conn Signal : Disconn Signal" },
+  { mask: 0x00001000, type: "flag", name: "If the BIT below is enabled, ADC will be performed unconditionally : HK Fuel Level AD" },
+  { mask: 0x0023E000, type: "group", name: "Skip Check Door Open State",
+    items: [
+    { bit: 0x00002000, label: "LHD Front Left (FD)" },
+    { bit: 0x00004000, label: "LHD Front Right (FP)" },
+    { bit: 0x00008000, label: "LHD Rear Left (RD)" },
+    { bit: 0x00010000, label: "LHD Rear Right (RP)" },
+    { bit: 0x00020000, label: "Trunk (TR)" },
+    { bit: 0x00200000, label: "SunRoof (SR)" },
+    { bit: 0x0001C000, label: "Skip the remaining 3 doors to check only the front left (CHK_DOOR_OPEN_FRONLY)" }
+   ]
+  },
+  { mask: 0x000C0000, type: "group", name: "Horn or Hazard control in remote control vehicle (no smart key)",
+    items: [
+      { bit: 0x00040000, label: "Alert Enable Horn" },
+      { bit: 0x00080000, label: "Alert Enable Hazard" }
+    ]
+  },
+  { mask: 0x00100000, type: "flag", name: "Hyundai Accent Hazard Control use 12V OUT1 (GPIOE -> GPIO PIN 1)" },
+  { mask: 0x00400000, type: "flag", name: "Door Auto Unlock When Open (Enable)" },
+  { mask: 0x00800000, type: "flag", name: "Fuel Level Percentage Disable" },
+  { mask: 0x01000000, type: "flag", name: "Handle Position Reversed" },
+  { mask: 0x02000000, type: "flag", name: "disable feature to control directly if smart key control process is failed (Disable)" },
+  { mask: 0x04000000, type: "flag", name: "disable anti-theft feature with transponderradiation if a user tries to lock the door (Enable)" },
+  { mask: 0x08000000, type: "flag", name: "Prevent entering sleep mode of the CAN Tranceiver in the device is in sleep mode (Enable)" },
+  { mask: 0x40000000, type: "flag", name: "Play hazard and horn manually if the door lock is controled by the fob (Enable - play hazard and horn with fob control)" },
+  { mask: 0x80000000, type: "flag", name: "CAN2 Mask - FULL Accept All Msg" }
+];
+
+
+const ext1BITMAP = [
+  { mask: 0x02000000, type: "flag", name: "24V Battery Type" },
+  { mask: 0x1C000000, type: "group", name: "Skip Engine Run Condition in OBD-II state machine",
+    items: [
+      { bit: 0x04000000, label: "BY_CAN DB" },
+      { bit: 0x08000000, label: "BY_CAN" },
+      { bit: 0x10000000, label: "BY_VOLT" }
+    ]
+  },
+  { mask: 0x20000000, type: "flag", name: "ACC Enable, This feature is temporary (Only used by haup EV scooter)" },
+  { mask: 0x40000000, type: "flag", name: "Single Button Smart Key" },
+  { mask: 0x80000000, type: "flag", name: "Supported ISG, This feature is temporary" }
+];
+
+
+
+/* ================= CORE DECODE ================= */
+
+function decodeBitmap(value, bitmap) {
+  let lines = [];
+
+  bitmap.forEach(def => {
+
+    // ===== FLAG =====
+    if (def.type === "flag") {
+      if (value & def.mask) {
+        lines.push(def.name);
+      }
+      return;
+    }
+
+    // ===== GROUP =====
+    if (def.type === "group") {
+      const masked = value & def.mask;
+      if (masked === 0) return;
+
+      // ---------- ENUM 판단 ----------
+      const enumItem = def.items.find(item => item.bit === masked);
+
+      if (enumItem) {
+        // ENUM
+        lines.push(`${def.name}: ${enumItem.label}`);
+      } else {
+        // MULTI
+        def.items.forEach(item => {
+          if ((value & item.bit) === item.bit) {
+            lines.push(`${def.name}: ${item.label}`);
+          }
+        });
+      }
+    }
+  });
+
+  return lines.length ? lines.join("\n") : "No flags set";
+}
+
+
+/* ================= INPUT PARSE ================= */
+function parseHex(str) {
+  if (!str) return 0;
+  const s = str.startsWith("0x") || str.startsWith("0X") ? str : "0x" + str;
+  const v = parseInt(s, 16);
+  if (Number.isNaN(v)) throw new Error(`Invalid hex value: ${str}`);
+  return v >>> 0;
+}
+
+
+/* ================= APPLY ================= */
+
+function applyHex() {
+  const raw = document.getElementById("hexAll").value.trim();
+  if (!raw) {
+    document.getElementById("result").textContent = "No data";
+    return;
+  }
+  
+  try {
+    const parts = raw.split(/[,\s]+/);
+    
+    const bitmap     = parseHex(parts[0]);
+    const extbitmap  = parseHex(parts[1]);
+    const ext1bitmap = parseHex(parts[2]);
+    
+    let out = [];
+    
+    out.push("[ Bitmask ]");
+    out.push(decodeBitmap(bitmap, BITMAP));
+    out.push("");
+    out.push("[ EXT Bitmask ]");
+    out.push(decodeBitmap(extbitmap, extBITMAP));
+    out.push("");
+    out.push("[ EXT1 Bitmask ]");
+    out.push(decodeBitmap(ext1bitmap, ext1BITMAP));
+    
+    document.getElementById("result").textContent = out.join("\n");
+    
+  } catch (e) {
+    document.getElementById("result").textContent =
+      "[ Invalid Input ]\n" + e.message;
+    }
+  }
+
+
+  /* ================= DECODE BY ENTER ================= */
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+      applyHex();
+    }
+  });
+</script>
+
+</body>
+</html>
