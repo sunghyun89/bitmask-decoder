@@ -352,13 +352,13 @@
         { bit: 0x00000100, label: "Type1"}
       ]
     },
-    { mask: 0x00000200, type: "group", name: "Door Open Status Active Low (Open) - Normal, Active High (Open) - Ford Maker",
+    { mask: 0x00000200, type: "group", name: "Door Open Status (Active Low (Open) - Normal, Active High (Open) - Ford Maker)",
       items: [
         { bit: 0x00000000, label: "Active Low"},
         { bit: 0x00000200, label: "Active High"}
       ]
     },
-    { mask: 0x00000400, type: "group", name: "It is not possible to reliably check the door lock/unlock status of the vehicle. Status cannot be checked during direct control or autolock operation. (Disable Auto Retry Door Lock)",
+    { mask: 0x00000400, type: "group", name: "It is not possible to reliably check the door lock/unlock status of the vehicle. Status cannot be checked during direct control or autolock operation.",
       items: [
         { bit: 0x00000000, label: "Disable"},
         { bit: 0x00000400, label: "Enable"}
@@ -406,7 +406,7 @@
         { bit: 0x00400000, label: "Enable"}
       ]
     },
-    { mask: 0x00800000, type: "group", name: "Does not change to percentage. Default : Change to Percentage, Amount of Fuel Level : BMW",
+    { mask: 0x00800000, type: "group", name: "Does not change to percentage. (Default : Change to Percentage, Amount of Fuel Level : BMW)",
       items: [
         { bit: 0x00000000, label: "Enable"},
         { bit: 0x00800000, label: "Disable"}
