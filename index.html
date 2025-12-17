@@ -352,13 +352,13 @@
         { bit: 0x00000100, label: "Type1"}
       ]
     },
-    { mask: 0x00000200, type: "group", name: "Door Open Status <br> Active Low (Open) - Normal, Active High (Open) - Ford Maker",
+    { mask: 0x00000200, type: "group", name: "Door Open Status Active Low (Open) - Normal, Active High (Open) - Ford Maker",
       items: [
         { bit: 0x00000000, label: "Active Low"},
         { bit: 0x00000200, label: "Active High"}
       ]
     },
-    { mask: 0x00000400, type: "group", name: "It is not possible to reliably check the door lock/unlock status of the vehicle. <br> Status cannot be checked during direct control or autolock operation. (Disable Auto Retry Door Lock)",
+    { mask: 0x00000400, type: "group", name: "It is not possible to reliably check the door lock/unlock status of the vehicle. Status cannot be checked during direct control or autolock operation. (Disable Auto Retry Door Lock)",
       items: [
         { bit: 0x00000000, label: "Disable"},
         { bit: 0x00000400, label: "Enable"}
@@ -400,19 +400,19 @@
         { bit: 0x00100000, label: "12V OUT1 (GPIOE -> GPIO PIN 1)"}
       ]
     },
-    { mask: 0x00400000, type: "group", name: "If the door is open, but it is locked, it will be unlocked automatically <br> It is controlled by single GPIO, but when the door lock is released in the vehicle, the unlocking may not be recognized depending on the vehicle. ex. 118D) <br> In this case, let's unlock it automatically.",
+    { mask: 0x00400000, type: "group", name: "If the door is open, but it is locked, it will be unlocked automatically. It is controlled by single GPIO, but when the door lock is released in the vehicle, the unlocking may not be recognized depending on the vehicle. ex. 118D) In this case, let's unlock it automatically.",
       items: [
         { bit: 0x00000000, label: "Disable"},
         { bit: 0x00400000, label: "Enable"}
       ]
     },
-    { mask: 0x00800000, type: "group", name: "Does not change to percentage <br> Default : Change to Percentage <br> Amount of Fuel Level : BMW",
+    { mask: 0x00800000, type: "group", name: "Does not change to percentage. Default : Change to Percentage, Amount of Fuel Level : BMW",
       items: [
         { bit: 0x00000000, label: "Enable"},
         { bit: 0x00800000, label: "Disable"}
       ]
     },
-    { mask: 0x01000000, type: "group", name: "When separate processing is required according to the difference in Handle Position, <br> Ex) The position related to the door status is reversed (Hyundai Kia overseas vehicles)",
+    { mask: 0x01000000, type: "group", name: "When separate processing is required according to the difference in Handle Position, Ex) The position related to the door status is reversed (Hyundai Kia overseas vehicles)",
       items: [
         { bit: 0x00000000, label: "NO"},
         { bit: 0x01000000, label: "YES"}
